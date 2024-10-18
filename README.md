@@ -14,3 +14,7 @@ Bastante similar à [prática 2.1](https://github.com/srSenhor/ufersa-pd-multica
   - Cliente 2 recebe temperatura e umidade relativa do ar
   - Cliente 3 recebe todos os dados
 - Programa roda durante um tempo estipulado
+
+## Tecnologias usadas
+
+- [RabbitMQ](https://www.rabbitmq.com/docs/download)
