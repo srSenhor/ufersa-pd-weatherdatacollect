@@ -18,28 +18,30 @@ import br.edu.ufersa.pd.weatherdatacollect.utils.Ports;
 public class Server {
 
     private final String GROUP_IP;
+    private final boolean SHOULD_SEND;
 
     private ScheduledExecutorService executor;
     private PseudoDatabase db;
     private String NET_INTERFACE;
 
-    public Server(String ip) {
+    public Server(String ip, boolean shouldSend) {
         this.db = PseudoDatabase.getInstance();
         this.GROUP_IP = ip;
+        this.SHOULD_SEND = shouldSend;
         this.init();
     }
 
+    public Server(String ip) {
+        this.db = PseudoDatabase.getInstance();
+        this.GROUP_IP = ip;
+        this.SHOULD_SEND = false;
+        this.init();
+    }
     private void init() {
         
         MulticastSocket ms = null;
         Scanner cin = null;
-
-        // CyclicBarrier barrier = new CyclicBarrier(NUMBER_OF_THREADS, () -> {});
-        /* 
-            TODO: Descobrir como eu posso fazer o servidor funcionar corretamente
-            O que roda na porta 225.7.8.9 deveria receber, armazenar e em seguida enviar  para o grupo no endereço 225.7.8.10
-            O que roda na porta 225.7.8.10 deveria receber e em seguida repassar através do RabbitMQ para os usuários
-        */
+        
         try {
 
             cin = new Scanner(System.in);
@@ -48,8 +50,6 @@ public class Server {
             System.out.println("Server -- " + InetAddress.getLocalHost() 
                                             + " running on port "
                                             + ms.getLocalPort());
-
-            // ds = new DatagramSocket();
 
             // setting group
             
@@ -82,12 +82,13 @@ public class Server {
                         data.values().stream().forEach(System.out::print);
                         System.out.println("===========================");
             
-                    }, 2, TimeUnit.MINUTES);
+                    }, 3, TimeUnit.MINUTES);
                     break;
 
                 case "225.7.8.11":
-                    this.executor = Executors.newScheduledThreadPool(1);
+                    this.executor = Executors.newScheduledThreadPool(2);
                     executor.scheduleWithFixedDelay(new ReceiverThread(ms), 0, 1, TimeUnit.SECONDS);
+                    executor.scheduleWithFixedDelay(new EmitterThread(SHOULD_SEND), 180, 1, TimeUnit.SECONDS);
                     executor.schedule(() -> {
                         executor.shutdownNow();
 
@@ -99,7 +100,7 @@ public class Server {
                         data.values().stream().forEach(System.out::print);
                         System.out.println("===========================");
 
-                    }, 2, TimeUnit.MINUTES);
+                    }, 3, TimeUnit.MINUTES);
                     break;
                 default:
                     break;
@@ -112,12 +113,4 @@ public class Server {
         }
     }
 
-    // private static void await(CyclicBarrier barrier, String debug) {
-    //     try {
-    //         System.out.println(debug + " bateu na barreira");
-    //         barrier.await();
-    //     } catch (InterruptedException | BrokenBarrierException e) {
-    //         e.printStackTrace();
-    //     }
-    // }
 }

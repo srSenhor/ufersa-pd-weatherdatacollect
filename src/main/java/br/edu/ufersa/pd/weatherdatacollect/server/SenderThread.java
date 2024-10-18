@@ -34,9 +34,7 @@ public class SenderThread implements Runnable {
         if (data != null) {
          
             objId++;
-            
             senderBuffer = data.toSendFormat().getBytes(StandardCharsets.UTF_8);
-            System.out.println("DEBUG: Object ID " + objId);
             
             try {
                 

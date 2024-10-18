@@ -46,7 +46,11 @@ public class Client {
                 channel.queueBind(queueName, EXCHANGE, routingKey);
             }
 
-            System.out.println("=== User waiting for some messages... ===");
+            System.out.println("This client wants this data: ");
+            ROUTINGKEYS.stream().forEach(System.out::println);
+            System.out.println();
+            
+            System.out.println("====== User waiting for some messages... ======");
 
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 String message = new String(delivery.getBody(), "UTF-8");

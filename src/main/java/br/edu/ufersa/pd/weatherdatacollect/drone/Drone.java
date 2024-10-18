@@ -124,7 +124,7 @@ public class Drone {
                 executor.schedule(() -> {
                     executor.shutdownNow();
                     System.out.println("end execution...");
-                }, 4, TimeUnit.MINUTES);
+                }, 3, TimeUnit.MINUTES);
                 break;
             case "1":
                 System.out.println("Goodbye my friend! ^~^");
