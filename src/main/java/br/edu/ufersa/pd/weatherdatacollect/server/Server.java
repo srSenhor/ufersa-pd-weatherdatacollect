@@ -1,7 +1,6 @@
 package br.edu.ufersa.pd.weatherdatacollect.server;
 
 import java.io.IOException;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
@@ -18,7 +17,6 @@ import br.edu.ufersa.pd.weatherdatacollect.utils.Ports;
 
 public class Server {
 
-    private final int NUMBER_OF_THREADS = 1;
     private final String GROUP_IP;
 
     private ScheduledExecutorService executor;
@@ -26,7 +24,6 @@ public class Server {
     private String NET_INTERFACE;
 
     public Server(String ip) {
-        this.executor = Executors.newScheduledThreadPool(NUMBER_OF_THREADS);
         this.db = PseudoDatabase.getInstance();
         this.GROUP_IP = ip;
         this.init();
@@ -35,11 +32,14 @@ public class Server {
     private void init() {
         
         MulticastSocket ms = null;
-        DatagramSocket ds = null;
         Scanner cin = null;
 
         // CyclicBarrier barrier = new CyclicBarrier(NUMBER_OF_THREADS, () -> {});
-
+        /* 
+            TODO: Descobrir como eu posso fazer o servidor funcionar corretamente
+            O que roda na porta 225.7.8.9 deveria receber, armazenar e em seguida enviar  para o grupo no endereço 225.7.8.10
+            O que roda na porta 225.7.8.10 deveria receber e em seguida repassar através do RabbitMQ para os usuários
+        */
         try {
 
             cin = new Scanner(System.in);
@@ -68,6 +68,8 @@ public class Server {
 
             switch (GROUP_IP) {
                 case "225.7.8.9":
+                    this.executor = Executors.newScheduledThreadPool(2);
+                    executor.scheduleWithFixedDelay(new SenderThread("225.7.8.11"), 0, 1, TimeUnit.SECONDS);
                     executor.scheduleWithFixedDelay(new ReceiverThread(ms), 0, 1, TimeUnit.SECONDS);
                     executor.schedule(() -> {
                         executor.shutdownNow();
@@ -80,23 +82,24 @@ public class Server {
                         data.values().stream().forEach(System.out::print);
                         System.out.println("===========================");
             
-                    }, 70, TimeUnit.SECONDS);
+                    }, 2, TimeUnit.MINUTES);
+                    break;
 
-                case "225.7.8.10":
-                        // executor.scheduleWithFixedDelay(printWait, 0, 1, TimeUnit.SECONDS);
-                        // executor.scheduleWithFixedDelay(new TransferThread(ms, ds, "225.0.0.20", ID), 10, 1, TimeUnit.SECONDS);
-                        // executor.schedule(() -> {
-                        //     executor.shutdownNow();
-                
-                        //     System.out.println("end execution...");
-                
-                        //     ConcurrentHashMap<Long, WeatherData> data = db.get();
-                
-                        //     System.out.println("===== Log de execucao =====");
-                        //     data.values().stream().forEach(System.out::print);
-                        //     System.out.println("===========================");
-                
-                        // }, 70, TimeUnit.SECONDS);
+                case "225.7.8.11":
+                    this.executor = Executors.newScheduledThreadPool(1);
+                    executor.scheduleWithFixedDelay(new ReceiverThread(ms), 0, 1, TimeUnit.SECONDS);
+                    executor.schedule(() -> {
+                        executor.shutdownNow();
+
+                        System.out.println("end execution...");
+
+                        ConcurrentHashMap<Long, WeatherData> data = db.get();
+
+                        System.out.println("===== Log de execucao =====");
+                        data.values().stream().forEach(System.out::print);
+                        System.out.println("===========================");
+
+                    }, 2, TimeUnit.MINUTES);
                     break;
                 default:
                     break;
@@ -117,9 +120,4 @@ public class Server {
     //         e.printStackTrace();
     //     }
     // }
-
-    public static void main(String[] args) {
-        new Server("225.7.8.9");
-    }
-
 }

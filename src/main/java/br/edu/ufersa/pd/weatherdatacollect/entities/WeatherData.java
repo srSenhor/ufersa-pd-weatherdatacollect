@@ -67,6 +67,10 @@ public class WeatherData {
     public LocalDateTime getDate() {
         return date;
     }
+
+    public String formattedDate() {
+        return fmt.format(date);
+    }
     
     public void setDate(LocalDateTime date) {
         this.date = date;
